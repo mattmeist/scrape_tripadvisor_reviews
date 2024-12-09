@@ -1,3 +1,5 @@
+Thanks to Will Rose for getting the ball started on this.
+
 This code will allow you to scrape reviews from TripAdvisor.
 
 ### This Script Returns:
