@@ -262,7 +262,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
     return rows, content[12]
   
 # Function to fetch questions
-def fetch_questions(geoId, detailId, attraction, max_qs, limit = 50, url, headers, relative_url):
+def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url):
     questions_df = []
     # Get batches of Qs at a time
     q_requests = math.ceil(max_qs/limit)
@@ -272,9 +272,9 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit = 50, url, header
         # Define payload
         q_payload = [{
             "variables": {
-                "locationId": detailId,
-                "offset": q_offset,
-                "limit": limit
+                "locationId": f"{detailId}",
+                "offset": f"{q_offset}",
+                "limit": f"{limit}"
             },
             "extensions": {
                 "preRegisteredQueryId": "0e34fba657dd66cf"
@@ -312,6 +312,7 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit = 50, url, header
                     if 'topAnswer_memberProfile_avatar_data_sizes' in flat_question:
                         del flat_question['topAnswer_memberProfile_avatar_data_sizes']
                     questions_df.append(flat_question)
+                time.sleep(4)
                 break
             except (requests.exceptions.RequestException, KeyError, IndexError) as e:
                 if attempt < 10 - 1:  # Retry until the last attempt
@@ -331,7 +332,7 @@ def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relat
             time.sleep(2)
             a_payload = [{
                 "variables": {
-                    "questionId": int(row['id'])
+                    "questionId": f"{int(row['id'])}"
                 },
                 "extensions": {
                     "preRegisteredQueryId": "3228d8dc53caf10f"
