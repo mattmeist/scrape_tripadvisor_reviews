@@ -320,7 +320,7 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, re
                 else:
                     raise RuntimeError(f"Failed after multiple attempts: {e}")
 
-        return questions_df
+    return questions_df
 
 # Fetch answers
 def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url):
@@ -449,6 +449,7 @@ for index, row in attractions.iterrows():
     df.to_csv(f'Attractions_{city}/{attraction}.csv', index=False)
     
     # Find questions
+    relative_url = f"/Attraction_Review-g{geoId}-d{detailId}-Reviews-{attraction}-{city}.html"
     limit = 50
     max_qs = int(re.search("([\d,]+)\sq",html.find('section', id='REVIEWS').find("div", id="tab-qa-content").find('span', class_="biGQs _P XWJSj Wb").text)[1])
     questions_df = pd.DataFrame(fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url)).drop_duplicates()
