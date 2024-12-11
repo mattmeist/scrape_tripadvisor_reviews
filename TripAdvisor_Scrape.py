@@ -79,15 +79,15 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             "pageName": "Attraction_Review",
             "relativeUrl": relative_url,
             "parameters": [
-                {"key": "geoId", "value": geoId},
-                {"key": "detailId", "value": detailId},
+                {"key": "geoId", "value": f"{geoId}"},
+                {"key": "detailId", "value": f"{detailId}"},
                 {"key": "offset", "value": offset}
             ],
             "route": {
                 "page": "Attraction_Review",
                 "params": {
-                    "geoId": geoId,
-                    "detailId": detailId,
+                    "geoId": f"{geoId}",
+                    "detailId": f"{detailId}",
                     "offset": offset
                 }
             },
@@ -100,16 +100,16 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             "page": "Attraction_Review",
             "pos": "en-US",
             "parameters": [
-                {"key": "geoId", "value": geoId},
-                {"key": "detailId", "value": detailId},
+                {"key": "geoId", "value": f"{geoId}"},
+                {"key": "detailId", "value": f"{detailId}"},
                 {"key": "offset", "value": offset}
             ],
             "factors": ["TITLE", "META_DESCRIPTION", "MASTHEAD_H1", "MAIN_H1", "IS_INDEXABLE", "RELCANONICAL"],
             "route": {
                 "page": "Attraction_Review",
                 "params": {
-                    "geoId": geoId,
-                    "detailId": detailId,
+                    "geoId": f"{geoId}",
+                    "detailId": f"{detailId}",
                     "offset": offset
                 }
             },
@@ -121,7 +121,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
         "variables": {
             "request": {
                 "tracking": {"screenName": "Attraction_Review", "pageviewUid": None},
-                "routeParameters": {"contentType": "attraction", "contentId": detailId},
+                "routeParameters": {"contentType": "attraction", "contentId": f"{detailId}"},
                 "clientState": None,
                 "updateToken": token
             },
