@@ -382,17 +382,16 @@ for link in links:
         
         attractions.append({'href': href, 'reviews': reviews})
 
-# Print the extracted results
-
+# Save the extracted results
 attractions = pd.DataFrame(attractions)
 attractions = attractions.sort_values(by='reviews', ascending=False).reset_index(drop=True)
 
 # Regex pattern to extract geoId, detailId, and attraction name
 pattern = r'-g(\d+)-d(\d+)-(.*)\.'
 attractions[['geoId', 'detailId', 'attraction']] = attractions['href'].str.extract(pattern)
+attractions.to_csv(f'Attractions_{city}.csv', index=False)
 
 # Now, actually do the thing!
-## Every 50 scrapes, it writes a csv
 # URL for all API calls
 url = "https://www.tripadvisor.com/data/graphql/ids"
 
@@ -445,16 +444,16 @@ for index, row in attractions.iterrows():
         if page % 50 == 0:
             df = pd.DataFrame(all_reviews).drop_duplicates()
             df.to_csv(f'Attractions_{city}/{attraction}.csv', index=False)
-df = pd.DataFrame(all_reviews).drop_duplicates()
-df.to_csv(f'Attractions_{city}/{attraction}.csv', index=False)
-
-# Find questions
-limit = 50
-max_qs = int(re.search("([\d,]+)\sq",html.find('section', id='REVIEWS').find("div", id="tab-qa-content").find('span', class_="biGQs _P XWJSj Wb").text)[1])
-questions_df = pd.DataFrame(fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url).drop_duplicates()
-questions_df.to_csv(f'Attractions_{city}_Questions/{attraction}.csv', index=False)
-
-# Find Answers
-answers_df = pd.DataFrame(fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url).drop_duplicates()
-answers_df.to_csv(f'Attractions_{city}_Answers/{attraction}.csv', index=False)
+    df = pd.DataFrame(all_reviews).drop_duplicates()
+    df.to_csv(f'Attractions_{city}/{attraction}.csv', index=False)
+    
+    # Find questions
+    limit = 50
+    max_qs = int(re.search("([\d,]+)\sq",html.find('section', id='REVIEWS').find("div", id="tab-qa-content").find('span', class_="biGQs _P XWJSj Wb").text)[1])
+    questions_df = pd.DataFrame(fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url).drop_duplicates()
+    questions_df.to_csv(f'Attractions_{city}_Questions/{attraction}.csv', index=False)
+    
+    # Find Answers
+    answers_df = pd.DataFrame(fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url).drop_duplicates()
+    answers_df.to_csv(f'Attractions_{city}_Answers/{attraction}.csv', index=False)
                
