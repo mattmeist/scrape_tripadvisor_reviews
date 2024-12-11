@@ -400,7 +400,7 @@ for index, row in attractions.iterrows():
     # Access each column
     geoId = row['geoId']
     detailId = row['detailId']
-    attraction = row['attraction']
+    attraction = re.search("Reviews-(\w+)-", row['attraction'])[1]
     start_url = f"https://www.tripadvisor.com{row['href']}"
     print(start_url)
     
