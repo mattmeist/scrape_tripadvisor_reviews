@@ -79,15 +79,15 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             "pageName": "Attraction_Review",
             "relativeUrl": relative_url,
             "parameters": [
-                {"key": "geoId", "value": f"{geoId}"},
-                {"key": "detailId", "value": f"{detailId}"},
+                {"key": "geoId", "value": geoId},
+                {"key": "detailId", "value": detailId},
                 {"key": "offset", "value": offset}
             ],
             "route": {
                 "page": "Attraction_Review",
                 "params": {
-                    "geoId": f"{geoId}",
-                    "detailId": f"{detailId}",
+                    "geoId": geoId,
+                    "detailId": detailId,
                     "offset": offset
                 }
             },
@@ -100,16 +100,16 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             "page": "Attraction_Review",
             "pos": "en-US",
             "parameters": [
-                {"key": "geoId", "value": f"{geoId}"},
-                {"key": "detailId", "value": f"{detailId}"},
+                {"key": "geoId", "value": geoId},
+                {"key": "detailId", "value": detailId},
                 {"key": "offset", "value": offset}
             ],
             "factors": ["TITLE", "META_DESCRIPTION", "MASTHEAD_H1", "MAIN_H1", "IS_INDEXABLE", "RELCANONICAL"],
             "route": {
                 "page": "Attraction_Review",
                 "params": {
-                    "geoId": f"{geoId}",
-                    "detailId": f"{detailId}",
+                    "geoId": geoId,
+                    "detailId": detailId,
                     "offset": offset
                 }
             },
@@ -121,7 +121,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
         "variables": {
             "request": {
                 "tracking": {"screenName": "Attraction_Review", "pageviewUid": None},
-                "routeParameters": {"contentType": "attraction", "contentId": f"{detailId}"},
+                "routeParameters": {"contentType": "attraction", "contentId": detailId},
                 "clientState": None,
                 "updateToken": token
             },
@@ -272,9 +272,9 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, re
         # Define payload
         q_payload = [{
             "variables": {
-                "locationId": f"{detailId}",
-                "offset": f"{q_offset}",
-                "limit": f"{limit}"
+                "locationId": detailId,
+                "offset": q_offset",
+                "limit": limit"
             },
             "extensions": {
                 "preRegisteredQueryId": "0e34fba657dd66cf"
@@ -332,7 +332,7 @@ def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relat
             time.sleep(2)
             a_payload = [{
                 "variables": {
-                    "questionId": f"{int(row['id'])}"
+                    "questionId": int(row['id'])
                 },
                 "extensions": {
                     "preRegisteredQueryId": "3228d8dc53caf10f"
