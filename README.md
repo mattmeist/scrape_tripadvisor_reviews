@@ -4,7 +4,10 @@ This code will allow you to scrape reviews from TripAdvisor.
 
 ### This Script Returns:
 
-A single csv file with all scrapable reviews for the top attractions in your stated city.
+- A single csv file with top attractions for your listed city.
+- Reviews: Multiple .csv files (one for each attraction) of all scrapable reviews for the top attractions in your stated city.
+- Questions: Multiple .csv files (one for each attraction) of all scrapable questions for the top attractions in your stated city.
+- Answers: Multiple .csv files (one for each attraction) of all scrapable answers for the top attractions in your stated city.
 
 ### How This Script Works:
 
@@ -27,5 +30,4 @@ city_name = "Mitchell_South_Dakota"
 ### Future Updates:
 
 - Ability to scrape more than just the top attractions in a city.
-- Ability to scrape Q&As
 - Ability to scrape other attraction info
