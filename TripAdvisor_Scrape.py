@@ -450,10 +450,10 @@ for index, row in attractions.iterrows():
     # Find questions
     limit = 50
     max_qs = int(re.search("([\d,]+)\sq",html.find('section', id='REVIEWS').find("div", id="tab-qa-content").find('span', class_="biGQs _P XWJSj Wb").text)[1])
-    questions_df = pd.DataFrame(fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url).drop_duplicates()
+    questions_df = pd.DataFrame(fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url)).drop_duplicates()
     questions_df.to_csv(f'Attractions_{city}_Questions/{attraction}.csv', index=False)
     
     # Find Answers
-    answers_df = pd.DataFrame(fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url).drop_duplicates()
+    answers_df = pd.DataFrame(fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url)).drop_duplicates()
     answers_df.to_csv(f'Attractions_{city}_Answers/{attraction}.csv', index=False)
                
