@@ -50,6 +50,19 @@ def create_directory(directory):
 
 # Create directories if they don't exist
 create_directory(f"Attractions_{city}")
+create_directory(f"Attractions_{city}_Questions")
+create_directory(f"Attractions_{city}_Answers")
+
+# Flatten dictionaries function
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 # Function to fetch reviews.
 # This is a bit of brute force. This is written so that it will definitely get 
@@ -248,6 +261,100 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
 
     return rows, content[12]
   
+# Function to fetch questions
+def fetch_questions(geoId, detailId, attraction, max_qs, limit = 50, url, headers, relative_url):
+    questions_df = []
+    # Get batches of Qs at a time
+    q_requests = math.ceil(max_qs/limit)
+
+    for q_request in list(range(q_requests)):
+        q_offset = q_request * limit
+        # Define payload
+        q_payload = [{
+            "variables": {
+                "locationId": detailId,
+                "offset": q_offset,
+                "limit": limit
+            },
+            "extensions": {
+                "preRegisteredQueryId": "0e34fba657dd66cf"
+            }
+        }]
+
+
+
+        # Define headers
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "*/*",
+            "Sec-Fetch-Site": "same-origin",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Host": "www.tripadvisor.com",
+            "Origin": "https://www.tripadvisor.com",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0.1 Safari/605.1.15",
+            "Referer": f"https://www.tripadvisor.com{relative_url}",
+            "Connection": "keep-alive",
+            "Sec-Fetch-Dest": "empty"
+        }
+
+        # Retry logic
+        for attempt in range(10):
+            try:
+                q_response = requests.post(url, headers=headers, data=json.dumps(q_payload))
+                q_response.raise_for_status()  # Catch HTTP errors
+                questions = q_response.json()[0]['data']['questions'][0]['questions']
+                for question in questions:
+                    flat_question = flatten_dict(question)
+                    if 'memberProfile_avatar_data_sizes' in flat_question:
+                        del flat_question['memberProfile_avatar_data_sizes']
+
+                    if 'topAnswer_memberProfile_avatar_data_sizes' in flat_question:
+                        del flat_question['topAnswer_memberProfile_avatar_data_sizes']
+                    questions_df.append(flat_question)
+                break
+            except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+                if attempt < 10 - 1:  # Retry until the last attempt
+                    time.sleep(2)
+                else:
+                    raise RuntimeError(f"Failed after multiple attempts: {e}")
+
+        return questions_df
+
+# Fetch answers
+def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url):
+    answers_df = []
+    for index, row in questions_df.iterrows():
+        if pd.isna(row['topAnswer_id']):
+            next
+        else:
+            time.sleep(2)
+            a_payload = [{
+                "variables": {
+                    "questionId": int(row['id'])
+                },
+                "extensions": {
+                    "preRegisteredQueryId": "3228d8dc53caf10f"
+                }
+            }]
+
+            for attempt in range(10):
+                try:
+                    a_response = requests.post(url, headers=headers, data=json.dumps(a_payload))
+                    a_response.raise_for_status()  # Catch HTTP errors
+                    answers = a_response.json()[0]['data']['QuestionsAndAnswers_getAnswersForQuestions'][0]['answers']
+                    for answer in answers:
+                            flat_answer = flatten_dict(answer)
+                            if 'memberProfile_avatar_data_sizes' in flat_answer:
+                                del flat_answer['memberProfile_avatar_data_sizes']
+                            answers_df.append(flat_answer)
+                    break
+                except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+                    if attempt < 10 - 1:  # Retry until the last attempt
+                        time.sleep(2)
+                    else:
+                        raise RuntimeError(f"Failed after multiple attempts: {e}")
+    return answers_df
   
 # Collect the top attractions in your city
 ## Note: This won't get everything. Just what's on the landing page. I may update
@@ -340,3 +447,14 @@ for index, row in attractions.iterrows():
             df.to_csv(f'Attractions_{city}/{attraction}.csv', index=False)
 df = pd.DataFrame(all_reviews).drop_duplicates()
 df.to_csv(f'Attractions_{city}/{attraction}.csv', index=False)
+
+# Find questions
+limit = 50
+max_qs = int(re.search("([\d,]+)\sq",html.find('section', id='REVIEWS').find("div", id="tab-qa-content").find('span', class_="biGQs _P XWJSj Wb").text)[1])
+questions_df = pd.DataFrame(fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url).drop_duplicates()
+questions_df.to_csv(f'Attractions_{city}_Questions/{attraction}.csv', index=False)
+
+# Find Answers
+answers_df = pd.DataFrame(fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url).drop_duplicates()
+answers_df.to_csv(f'Attractions_{city}_Answers/{attraction}.csv', index=False)
+               
