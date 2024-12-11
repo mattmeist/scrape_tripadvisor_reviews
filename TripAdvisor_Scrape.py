@@ -419,11 +419,11 @@ for index, row in attractions.iterrows():
         if page == 0:
             #Get next page
             token = re.search("updateToken%5C%5C%5C%22%3A%5C%5C%5C%22(.*?)%5C%5C%5C%22%7D%7D%2C%7B%5C%5C%5C%22", page_source)[1]
-            relative_url = f"/Attraction_Review-g{geoId}-d{detailId}-Reviews-or{(page+1)*10}-{attraction}.html"
+            relative_url = f"/Attraction_Review-g{geoId}-d{detailId}-Reviews-or{(page+1)*10}-{attraction}-{city}.html"
 
         else:
             offset = int(page*10)
-            relative_url = f"/Attraction_Review-g{geoId}-d{detailId}-Reviews-or{offset}-{attraction}.html"
+            relative_url = f"/Attraction_Review-g{geoId}-d{detailId}-Reviews-or{offset}-{attraction}-{city}.html"
 
             #Get reviews
             reviews, links = fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url)
