@@ -69,6 +69,7 @@ def flatten_dict(d, parent_key='', sep='_'):
 # any page that is available, but may take forever to do so. You can change that
 # by turning down (or up??) the `attempts` argument.
 #Create review fetch function
+#Create review fetch function
 def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
     rows = []
     offset = int(page * 10)
@@ -121,7 +122,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
         "variables": {
             "request": {
                 "tracking": {"screenName": "Attraction_Review", "pageviewUid": None},
-                "routeParameters": {"contentType": "attraction", "contentId": detailId},
+                "routeParameters": {"contentType": "attraction", "contentId": f"{detailId}"},
                 "clientState": None,
                 "updateToken": token
             },
@@ -165,7 +166,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
 
     # Parse reviews
     try:
-        for review in content:
+        for review in content[2:12]:
             owner_response = review.get('ownerResponse', {})
             if owner_response:
                 if owner_response.get('positionAtLocation', {}):
@@ -211,6 +212,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
                 "review_link": review.get('cardLink', {}).get('webRoute', {}).get('webLinkUrl') if review.get('cardLink', {}).get('webRoute', {}) else None,
                 "reviewer_name": user_profile.get('localizedDisplayName', {}).get('text') if user_profile.get('localizedDisplayName', {}) else None,
                 "reviewer_contributions": user_profile.get('contributionCount', {}).get('text') if user_profile.get('contributionCount', {}) else None,
+                "reviewer_url": user_profile.get('profileRoute', {}).get('webLinkUrl') if user_profile.get('profileRoute', {}) else None,
                 "profile_image_url": upi if upi else None,
                 "reviewed_item": supplier if supplier else None,
                 "owner": owner_response.get('displayName') if owner_response else None,
@@ -224,7 +226,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
     except:
         print(f"Collected, but could not parse page: {page}")
         try:
-            for review in content:
+            for review in content[2:12]:
 
                 user_profile = review.get('userProfile', {})
 
@@ -247,6 +249,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
                     "review_link": "NA",
                     "reviewer_name": user_profile.get('localizedDisplayName', {}).get('text') if user_profile.get('localizedDisplayName', {}) else None,
                     "reviewer_contributions": "NA",
+                    "reviewer_url": user_profile.get('profileRoute', {}).get('webLinkUrl') if user_profile.get('profileRoute', {}) else None,
                     "profile_image_url": "NA",
                     "reviewed_item": supplier if supplier else None,
                     "owner": "NA",
