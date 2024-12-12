@@ -158,7 +158,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             response.raise_for_status()  # Catch HTTP errors
             content = response.json()[2]['data']['Result'][0]['detailSectionGroups'][0]['detailSections'][0]['tabs'][0]['content']
             break
-        except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+        except (requests.exceptions.RequestException, KeyError, IndexError, TypeError) as e:
             if attempt < 10 - 1:  # Retry until the last attempt
                 time.sleep(60)
             else:
@@ -317,9 +317,9 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, re
                     questions_df.append(flat_question)
                 time.sleep(4)
                 break
-            except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+            except (requests.exceptions.RequestException, KeyError, IndexError, TypeError) as e:
                 if attempt < 10 - 1:  # Retry until the last attempt
-                    time.sleep(2)
+                    time.sleep(60)
                 else:
                     raise RuntimeError(f"Failed after multiple attempts: {e}")
 
@@ -353,9 +353,9 @@ def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relat
                                 del flat_answer['memberProfile_avatar_data_sizes']
                             answers_df.append(flat_answer)
                     break
-                except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+                except (requests.exceptions.RequestException, KeyError, IndexError, TypeError) as e:
                     if attempt < 10 - 1:  # Retry until the last attempt
-                        time.sleep(2)
+                        time.sleep(60)
                     else:
                         raise RuntimeError(f"Failed after multiple attempts: {e}")
     return answers_df
