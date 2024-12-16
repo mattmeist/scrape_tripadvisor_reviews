@@ -8,7 +8,7 @@
 ## https://www.tripadvisor.com/Attraction_Review-g54718-d145077-Reviews-Corn_Palace-Mitchell_South_Dakota.html
 ## In this case, the geoId is "54718" and the city_name is "Mitchell_South_Dakota"
 geoId = "54718" 
-city_name = "Mitchell_South_Dakota"
+city = "Mitchell_South_Dakota"
 # Cool.
 
 # Loadin some libraries
@@ -366,22 +366,22 @@ def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relat
 driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.set_page_load_timeout(300)
 
-city_url = f"https://www.tripadvisor.com/Attractions-g{geoId}-Activities-{city}.html"
+city_url = f"https://www.tripadvisor.com/Attractions-g{geoId}-Activities-oa0-{city}.html"
 driver.get(city_url)
 time.sleep(4)  
 page_source = driver.page_source
 html = BeautifulSoup(page_source, "html.parser")
 
 # Find attractions
+links = html.find_all('div', class_="alPVI eNNhq PgLKC tnGGX")
 attractions = []
-links = html.find_all('div', class_="jhsNf N G")
 for link in links:
     href = None
     reviews = None
     
-    if link.find('div', class_="jhsNf N G"):
-        href = link.find('div', class_="jhsNf N G").find('a').get('href')
-        reviews = link.find('div', class_="jhsNf N G").find('span', class_= "biGQs _P pZUbB osNWb").text
+    if link.find('a'):
+        href = link.find('a').get('href')
+        reviews = link.find('span', class_="biGQs _P pZUbB osNWb").text
         reviews = int(re.sub(r'\D', '', reviews)) if reviews else None
         
         attractions.append({'href': href, 'reviews': reviews})
