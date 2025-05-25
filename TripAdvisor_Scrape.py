@@ -68,7 +68,13 @@ def flatten_dict(d, parent_key='', sep='_'):
 # This is a bit of brute force. This is written so that it will definitely get 
 # any page that is available, but may take forever to do so. You can change that
 # by turning down (or up??) the `attempts` argument.
-#Create review fetch function
+# Function to find links for tokens
+def find_links_index(content):
+    for idx, item in enumerate(content):
+        if 'links' in item:
+            return idx
+    raise ValueError("No item with a 'links' key was found.")
+    
 #Create review fetch function
 def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
     rows = []
@@ -80,9 +86,9 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             "pageName": "Attraction_Review",
             "relativeUrl": relative_url,
             "parameters": [
-                {"key": "geoId", "value": geoId},
-                {"key": "detailId", "value": detailId},
-                {"key": "offset", "value": offset}
+                {"key": "geoId", "value": str(geoId)},
+                {"key": "detailId", "value": str(detailId)},
+                {"key": "offset", "value": str(offset)}
             ],
             "route": {
                 "page": "Attraction_Review",
@@ -101,9 +107,9 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
             "page": "Attraction_Review",
             "pos": "en-US",
             "parameters": [
-                {"key": "geoId", "value": geoId},
-                {"key": "detailId", "value": detailId},
-                {"key": "offset", "value": offset}
+                {"key": "geoId", "value": str(geoId)},
+                {"key": "detailId", "value": str(detailId)},
+                {"key": "offset", "value": str(offset)}
             ],
             "factors": ["TITLE", "META_DESCRIPTION", "MASTHEAD_H1", "MAIN_H1", "IS_INDEXABLE", "RELCANONICAL"],
             "route": {
@@ -135,7 +141,7 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
         },
         "extensions": {"preRegisteredQueryId": "a485e0bc56f398b0"}
     }]
-    
+
     # Define headers
     headers = {
         "Content-Type": "application/json",
@@ -166,69 +172,35 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
 
     # Parse reviews
     try:
-        for review in content[2:12]:
-            owner_response = review.get('ownerResponse', {})
-            if owner_response:
-                if owner_response.get('positionAtLocation', {}):
-                    owner_response_position = owner_response.get('positionAtLocation', {}).get('text', {})
+        for review in content:
+            if review.get('userProfile', {}) == {}:
+                next
+            else:
+                owner_response = review.get('ownerResponse', {})
+                if owner_response:
+                    if owner_response.get('positionAtLocation', {}):
+                        owner_response_position = owner_response.get('positionAtLocation', {}).get('text', {})
+                    else:
+                        owner_response_position = None
+
+                    if owner_response.get('publishedDate', {}):
+                        owner_response_date = owner_response.get('publishedDate', {}).get('text', {}) if owner_response.get('publishedDate', {}).get('text', {}) else None
+                    else:
+                        owner_response_date = None
                 else:
                     owner_response_position = None
-
-                if owner_response.get('publishedDate', {}):
-                    owner_response_date = owner_response.get('publishedDate', {}).get('text', {}) if owner_response.get('publishedDate', {}).get('text', {}) else None
-                else:
                     owner_response_date = None
-            else:
-                owner_response_position = None
-                owner_response_date = None
-
-            user_profile = review.get('userProfile', {})
-            user_profile_image = user_profile.get('profileImage', {}) if user_profile else None
-
-            if user_profile_image:
-                if user_profile_image.get('photoSizes', [{}]):
-                    upi = user_profile_image.get('photoSizes', [{}])[0].get('url')
-                else:
-                    upi = None
-            else:
-                upi = None
-
-            if review.get('supplierName', {}):
-                if review.get('supplierName', {}).get('text', {}):
-                    supplier = review.get('supplierName', {}).get('text', {}).get('text')
-                else:
-                    supplier = None
-            else:
-                supplier = None
-
-            row = {
-                "review_id": review.get('helpfulVote', {}).get('helpfulVoteAction', {}).get('objectId'),
-                "rating_number": review.get('bubbleRatingNumber'),
-                "rating_text": review.get('bubbleRatingText', {}).get('text') if review.get('bubbleRatingText', {}) else None,
-                "review_title": review.get('htmlTitle', {}).get('text') if review.get('htmlTitle', {}) else None,
-                "review_text": review.get('htmlText', {}).get('text') if review.get('htmlText', {}) else None,
-                "published_date": review.get('publishedDate', {}).get('text') if review.get('publishedDate', {}) else None,
-                "helpful_votes": review.get('helpfulVote', {}).get('helpfulVotes', {}).get('text') if review.get('helpfulVote', {}).get('helpfulVotes', {}) else None,
-                "review_link": review.get('cardLink', {}).get('webRoute', {}).get('webLinkUrl') if review.get('cardLink', {}).get('webRoute', {}) else None,
-                "reviewer_name": user_profile.get('localizedDisplayName', {}).get('text') if user_profile.get('localizedDisplayName', {}) else None,
-                "reviewer_contributions": user_profile.get('contributionCount', {}).get('text') if user_profile.get('contributionCount', {}) else None,
-                "reviewer_url": user_profile.get('profileRoute', {}).get('webLinkUrl') if user_profile.get('profileRoute', {}) else None,
-                "profile_image_url": upi if upi else None,
-                "reviewed_item": supplier if supplier else None,
-                "owner": owner_response.get('displayName') if owner_response else None,
-                "owner_id": owner_response.get('ownerResponseId', {}) if owner_response else None,
-                "owner_response_position": owner_response_position if owner_response_position else None,
-                "owner_response_date": owner_response_date if owner_response_date else None,
-                "owner_response_text": owner_response.get('text', {}) if owner_response else None
-            }
-            rows.append(row)
-
-    except:
-        print(f"Collected, but could not parse page: {page}")
-        try:
-            for review in content[2:12]:
 
                 user_profile = review.get('userProfile', {})
+                user_profile_image = user_profile.get('profileImage', {}) if user_profile else None
+
+                if user_profile_image:
+                    if user_profile_image.get('photoSizes', [{}]):
+                        upi = user_profile_image.get('photoSizes', [{}])[0].get('url')
+                    else:
+                        upi = None
+                else:
+                    upi = None
 
                 if review.get('supplierName', {}):
                     if review.get('supplierName', {}).get('text', {}):
@@ -245,26 +217,64 @@ def fetch_reviews(page, geoId, detailId, attraction, token, url, relative_url):
                     "review_title": review.get('htmlTitle', {}).get('text') if review.get('htmlTitle', {}) else None,
                     "review_text": review.get('htmlText', {}).get('text') if review.get('htmlText', {}) else None,
                     "published_date": review.get('publishedDate', {}).get('text') if review.get('publishedDate', {}) else None,
-                    "helpful_votes": "NA",
-                    "review_link": "NA",
+                    "helpful_votes": review.get('helpfulVote', {}).get('helpfulVotes', {}).get('text') if review.get('helpfulVote', {}).get('helpfulVotes', {}) else None,
+                    "review_link": review.get('cardLink', {}).get('webRoute', {}).get('webLinkUrl') if review.get('cardLink', {}).get('webRoute', {}) else None,
                     "reviewer_name": user_profile.get('localizedDisplayName', {}).get('text') if user_profile.get('localizedDisplayName', {}) else None,
-                    "reviewer_contributions": "NA",
+                    "reviewer_contributions": user_profile.get('contributionCount', {}).get('text') if user_profile.get('contributionCount', {}) else None,
                     "reviewer_url": user_profile.get('profileRoute', {}).get('webLinkUrl') if user_profile.get('profileRoute', {}) else None,
-                    "profile_image_url": "NA",
+                    "profile_image_url": upi if upi else None,
                     "reviewed_item": supplier if supplier else None,
-                    "owner": "NA",
-                    "owner_id": "NA",
-                    "owner_response_position": "NA",
-                    "owner_response_date": "NA",
-                    "owner_response_text": "NA"
+                    "owner": owner_response.get('displayName') if owner_response else None,
+                    "owner_id": owner_response.get('ownerResponseId', {}) if owner_response else None,
+                    "owner_response_position": owner_response_position if owner_response_position else None,
+                    "owner_response_date": owner_response_date if owner_response_date else None,
+                    "owner_response_text": owner_response.get('text', {}) if owner_response else None
                 }
                 rows.append(row)
+
+    except:
+        print(f"Collected, but could not parse page: {page}")
+        try:
+            for review in content:
+                if review.get('userProfile', {}) == {}:
+                    next
+                else:
+                    user_profile = review.get('userProfile', {})
+
+                    if review.get('supplierName', {}):
+                        if review.get('supplierName', {}).get('text', {}):
+                            supplier = review.get('supplierName', {}).get('text', {}).get('text')
+                        else:
+                            supplier = None
+                    else:
+                        supplier = None
+
+                    row = {
+                        "review_id": review.get('helpfulVote', {}).get('helpfulVoteAction', {}).get('objectId'),
+                        "rating_number": review.get('bubbleRatingNumber'),
+                        "rating_text": review.get('bubbleRatingText', {}).get('text') if review.get('bubbleRatingText', {}) else None,
+                        "review_title": review.get('htmlTitle', {}).get('text') if review.get('htmlTitle', {}) else None,
+                        "review_text": review.get('htmlText', {}).get('text') if review.get('htmlText', {}) else None,
+                        "published_date": review.get('publishedDate', {}).get('text') if review.get('publishedDate', {}) else None,
+                        "helpful_votes": "NA",
+                        "review_link": "NA",
+                        "reviewer_name": user_profile.get('localizedDisplayName', {}).get('text') if user_profile.get('localizedDisplayName', {}) else None,
+                        "reviewer_contributions": "NA",
+                        "reviewer_url": user_profile.get('profileRoute', {}).get('webLinkUrl') if user_profile.get('profileRoute', {}) else None,
+                        "profile_image_url": "NA",
+                        "reviewed_item": supplier if supplier else None,
+                        "owner": "NA",
+                        "owner_id": "NA",
+                        "owner_response_position": "NA",
+                        "owner_response_date": "NA",
+                        "owner_response_text": "NA"
+                    }
+                    rows.append(row)
         except:
             print(f"Collected, but could not (simple) parse page: {page}")
 
-    return rows, content[12]
-  
-# Function to fetch questions
+    return rows, content[find_links_index(content)]
+
 def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, relative_url):
     questions_df = []
     # Get batches of Qs at a time
@@ -276,8 +286,8 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, re
         q_payload = [{
             "variables": {
                 "locationId": detailId,
-                "offset": q_offset",
-                "limit": limit"
+                "offset": q_offset,
+                "limit": limit
             },
             "extensions": {
                 "preRegisteredQueryId": "0e34fba657dd66cf"
@@ -319,13 +329,12 @@ def fetch_questions(geoId, detailId, attraction, max_qs, limit, url, headers, re
                 break
             except (requests.exceptions.RequestException, KeyError, IndexError, TypeError) as e:
                 if attempt < 10 - 1:  # Retry until the last attempt
-                    time.sleep(60)
+                    time.sleep(30)
                 else:
                     raise RuntimeError(f"Failed after multiple attempts: {e}")
 
     return questions_df
 
-# Fetch answers
 def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relative_url):
     answers_df = []
     for index, row in questions_df.iterrows():
@@ -355,7 +364,7 @@ def fetch_answers(geoId, detailId, attraction, questions_df, headers, url, relat
                     break
                 except (requests.exceptions.RequestException, KeyError, IndexError, TypeError) as e:
                     if attempt < 10 - 1:  # Retry until the last attempt
-                        time.sleep(60)
+                        time.sleep(30)
                     else:
                         raise RuntimeError(f"Failed after multiple attempts: {e}")
     return answers_df
